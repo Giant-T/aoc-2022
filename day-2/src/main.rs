@@ -5,7 +5,7 @@ enum Shape {
     Scissors = 3,
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 enum Outcome {
     Lost = 0,
     Draw = 3,
@@ -36,26 +36,45 @@ impl Match {
     }
 }
 
+fn calculate_move(opponent_move: &Shape, outcome: &Outcome) -> Shape {
+    match outcome {
+        Outcome::Lost => match opponent_move {
+            Shape::Rock => Shape::Scissors,
+            Shape::Paper => Shape::Rock,
+            Shape::Scissors => Shape::Paper,
+        },
+        Outcome::Draw => opponent_move.clone(),
+        Outcome::Win => match opponent_move {
+            Shape::Rock => Shape::Paper,
+            Shape::Paper => Shape::Scissors,
+            Shape::Scissors => Shape::Rock,
+        },
+    }
+}
+
 fn main() {
     let mut score = 0;
 
     include_str!("../inputs.txt").lines().for_each(|line| {
-        let moves: Vec<Shape> = line
-            .split(" ")
-            .map(|letter| match letter {
-                "A" => Shape::Rock,
-                "B" => Shape::Paper,
-                "C" => Shape::Scissors,
-                "X" => Shape::Rock,
-                "Y" => Shape::Paper,
-                "Z" => Shape::Scissors,
-                _ => panic!(),
-            })
-            .collect();
+        let moves: Vec<&str> = line.split(" ").collect();
+
+        let opponent_move = match moves[0] {
+            "A" => Shape::Rock,
+            "B" => Shape::Paper,
+            "C" => Shape::Scissors,
+            _ => panic!(),
+        };
+
+        let outcome = match moves[1] {
+            "X" => Outcome::Lost,
+            "Y" => Outcome::Draw,
+            "Z" => Outcome::Win,
+            _ => panic!(),
+        };
 
         let current_match = Match {
-            opponent_shape: moves[0],
-            player_shape: moves[1],
+            opponent_shape: opponent_move,
+            player_shape: calculate_move(&opponent_move, &outcome),
         };
 
         score += current_match.calculate_score();
